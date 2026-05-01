@@ -2,53 +2,31 @@
 
 ## How to use this mod
 
-Enable GitHub Pages for this repository:
-
-1. Open this repository on GitHub.
-2. Go to **Settings**.
-3. Go to **Pages**.
-4. Under **Build and deployment**, choose:
-
-   * **Source:** Deploy from a branch
-   * **Branch:** `main`
-   * **Folder:** `/root`
-5. Save and wait for GitHub Pages to deploy.
-
-Then load the mod in Cookie Clicker with this bookmarklet:
-
-```javascript
-javascript:(function() { Game.LoadMod('https://danlitvak.github.io/FortuneCookieUpdate/FurtuneCookieUpdate.js'); }());
-```
-
-The current script filename is:
-
-```text
-FurtuneCookieUpdate.js
-```
-
-The URL must match the filename exactly. If the file is renamed to:
-
-```text
-FortuneCookieUpdate.js
-```
-
-then use:
+Open Cookie Clicker and use this bookmarklet:
 
 ```javascript
 javascript:(function() { Game.LoadMod('https://danlitvak.github.io/FortuneCookieUpdate/FortuneCookieUpdate.js'); }());
 ```
 
-You can also load it from the browser console while Cookie Clicker is open:
+To create the bookmarklet:
+
+1. Create a new browser bookmark.
+2. Name it something like `Fortune Cookie Update`.
+3. Paste the bookmarklet above into the bookmark URL field.
+4. Open Cookie Clicker.
+5. Click the bookmark.
+
+The mod should load into the game and add its settings under the normal Cookie Clicker **Options** menu.
+
+You can also load it directly from the browser console while Cookie Clicker is open:
 
 ```javascript
-Game.LoadMod('https://danlitvak.github.io/FortuneCookieUpdate/FurtuneCookieUpdate.js');
+Game.LoadMod('https://danlitvak.github.io/FortuneCookieUpdate/FortuneCookieUpdate.js');
 ```
 
-## Project overview
+## Credits
 
-A small update to the Cookie Clicker **Fortune Cookie** mod that adds a configurable forecast for the next **Sweet / Free Sugar Lump** outcome from **Force the Hand of Fate**.
-
-This project is based on the original **Fortune Cookie** mod by **Klattmose**, which forecasts Cookie Clicker RNG outcomes such as Grimoire spell results, Force the Hand of Fate outcomes, Shimmering Veil durability, and dragon petting drops.
+This project is based on the original **Fortune Cookie** mod by **Klattmose**.
 
 Original Fortune Cookie loader:
 
@@ -56,76 +34,66 @@ Original Fortune Cookie loader:
 javascript:(function() { Game.LoadMod('https://klattmose.github.io/CookieClicker/FortuneCookie.js'); }());
 ```
 
-This repository contains a modified version of that mod.
+Original mod features include forecasts for:
 
-## Why this update exists
+* Force the Hand of Fate
+* Spontaneous Edifice
+* Gambler’s Fever Dream
+* Conjure Baked Goods
+* Shimmering Veil / Reinforced Membrane
+* Dragon drops
 
-The original Fortune Cookie mod forecasts nearby **Force the Hand of Fate** outcomes, including rare outcomes such as:
+This update keeps the structure and purpose of the original mod while adding a targeted forecast for the next **Sweet / Free Sugar Lump** result.
 
+## Project overview
+
+**Fortune Cookie Update** is a Cookie Clicker mod that extends the original Fortune Cookie mod with a new long-range forecast for the rare **Free Sugar Lump** outcome from **Force the Hand of Fate**.
+
+In Cookie Clicker, this outcome is often called a **Sweet** drop. It is valuable but extremely rare, which makes it hard to plan around using only the normal short forecast table.
+
+This project adds a focused tool that answers:
+
+```text
+How many total Grimoire spell casts are left until the next Sweet / Free Sugar Lump?
+```
+
+## The problem
+
+The original Fortune Cookie mod already predicts upcoming Force the Hand of Fate outcomes, but it is designed for short-range forecasting.
+
+That works well for common outcomes such as:
+
+* Frenzy
+* Lucky
 * Click Frenzy
 * Building Special
 * Elder Frenzy
-* Free Sugar Lump
 
-However, **Free Sugar Lump**, also commonly called a “Sweet” drop, is extremely rare. A normal short forecast is usually not enough to know when the next one will appear.
+However, **Free Sugar Lump** is rare enough that it may be hundreds of thousands of spell positions away.
 
-This update answers:
+Expanding the normal forecast table to search that far would not be practical. It would make the tooltip unreadable and could freeze the browser.
 
-```text
-How many total Grimoire spell casts are left until the next Force the Hand of Fate Sweet / Free Sugar Lump result?
-```
+The problem was to add a long-range search without making the game slow or the interface messy.
 
-## What was added
+## The solution
 
-This update adds a **Sweet forecast** system.
+This update adds a separate **Sweet forecast** system.
 
-The feature:
-
-* Searches future Force the Hand of Fate outcomes for the next `Free Sugar Lump`
-* Shows the number of total Grimoire spell casts until that outcome
-* Displays the result inside the Force the Hand of Fate tooltip
-* Adds settings-menu controls for the scan
-* Allows the maximum Sweet search length to be changed
-* Processes the search in chunks to avoid freezing the game
-* Caches the result so the same search is not repeated unnecessarily
-
-## How the Sweet forecast works
-
-Cookie Clicker’s Grimoire uses the total number of spells cast as part of the random seed for spell outcomes.
-
-For Force the Hand of Fate, the mod checks future spell positions by simulating:
-
-```javascript
-Math.seedrandom(Game.seed + '/' + spellCount);
-```
-
-Then it follows the same random-choice logic used by the Fortune Cookie forecast.
-
-The search checks each future total spell count until it finds a Force the Hand of Fate result equal to:
+Instead of showing thousands or millions of future outcomes, the mod searches specifically for one result:
 
 ```javascript
 'Free Sugar Lump'
 ```
 
-When found, it displays the offset from the current total spell count:
+When the result is found, the tooltip displays a clean summary:
 
 ```text
 Next Sweet: 42,315 spells
 ```
 
-That means the Sweet result is expected after 42,315 total Grimoire spell casts.
+The number means total Grimoire spell casts, not only Force the Hand of Fate casts.
 
-## Important spell count note
-
-The number shown is based on **total Grimoire spells cast**, not only Force the Hand of Fate casts.
-
-Cookie Clicker’s spell RNG uses:
-
-```javascript
-M.spellsCastTotal
-```
-
-So casting any Grimoire spell advances the future Force the Hand of Fate sequence.
+This matters because Cookie Clicker’s spell RNG uses the total number of Grimoire spells cast. Casting any spell advances the sequence.
 
 For example, if the tooltip says:
 
@@ -133,38 +101,56 @@ For example, if the tooltip says:
 Next Sweet: 100 spells
 ```
 
-then casting 99 other Grimoire spells and then casting Force the Hand of Fate should put you on that predicted Sweet outcome, assuming the relevant game state has not changed.
+then 100 total Grimoire spell casts must pass before that Sweet outcome is reached.
 
-## Game state factors
+## How it works
 
-The Sweet forecast depends on:
+Cookie Clicker uses seeded random number generation for Grimoire spell outcomes. The original Fortune Cookie mod takes advantage of that by simulating the same random sequence the game uses.
 
-* Game seed
-* Total spells cast
-* Current season
-* Force the Hand of Fate backfire chance
-* Simulated golden cookies setting
-* Whether Dragonflight is active
-* Whether Building Special is eligible
-* Custom forecast hooks from other mods
-* Configured maximum Sweet scan length
+This update follows the same idea.
 
-If one of these changes, the cached Sweet forecast is invalidated and recalculated.
+For each future spell position, the mod simulates the Force the Hand of Fate outcome using the game seed and spell count:
 
-## Performance
+```javascript
+Math.seedrandom(Game.seed + '/' + spellCount);
+```
 
-A naive implementation would scan a large number of future spell results all at once and could freeze the browser.
+It then checks whether that future outcome is:
 
-This update scans in chunks.
+```javascript
+'Free Sugar Lump'
+```
 
-Default settings:
+The original Fortune Cookie logic includes Free Sugar Lump in both success and backfire branches of Force the Hand of Fate:
+
+```javascript
+if (Math.random() < 0.0001) choices.push('Free Sugar Lump');
+```
+
+and:
+
+```javascript
+if (Math.random() < 0.003) choices.push('Free Sugar Lump');
+```
+
+This project uses that same outcome name as the target for the Sweet forecast.
+
+## Performance approach
+
+A direct search through a very large number of future spell positions could freeze the browser.
+
+To avoid that, the search is processed in chunks.
+
+Default behavior:
 
 ```text
 Max Sweet scan: 1,000,000 spells
 Chunk size: 5,000 checks
 ```
 
-While scanning, the tooltip displays:
+The scan runs in small batches instead of all at once. This allows Cookie Clicker to keep responding while the search continues.
+
+While scanning, the tooltip shows progress:
 
 ```text
 Next Sweet: scanning... 25,000 / 1,000,000 checked
@@ -182,7 +168,7 @@ If no result is found within the configured limit:
 Next Sweet: not found (scan limit: 1,000,000 spells)
 ```
 
-## Settings menu changes
+## Settings added
 
 This update adds a **Sweet forecast** section to the Fortune Cookie settings menu.
 
@@ -192,7 +178,7 @@ Turns the Sweet forecast display on or off.
 
 ### Max Sweet scan slider
 
-Controls the maximum number of future total spell positions to search.
+Controls how far ahead the mod searches.
 
 Default:
 
@@ -206,70 +192,60 @@ Slider range:
 1,000 to 2,000,000
 ```
 
-### Set exact limit button
+### Set exact limit
 
-Allows entering an exact maximum search length manually instead of using the slider.
+Allows the user to enter an exact search limit manually.
 
-## What this project is based on
+This is useful if the user wants a custom search range instead of using the slider.
 
-This project is based on Klattmose’s original **Fortune Cookie** mod for Cookie Clicker.
+## Game state factors
 
-The original mod includes forecast logic for:
+The forecast depends on the current game state.
 
-* Force the Hand of Fate
-* Spontaneous Edifice
-* Gambler’s Fever Dream
-* Conjure Baked Goods
-* Shimmering Veil / Reinforced Membrane
-* Dragon drops
+The result can change when any of these change:
 
-This update keeps the original structure and adds a targeted Sweet / Free Sugar Lump scanner on top of the existing Force the Hand of Fate forecast logic.
+* Game seed
+* Total Grimoire spells cast
+* Current season
+* Force the Hand of Fate backfire chance
+* Simulated golden cookies setting
+* Dragonflight buff status
+* Building Special eligibility
+* Other mods that change Force the Hand of Fate behavior
+* Configured Sweet scan limit
 
-The original mod’s `Free Sugar Lump` logic appears in both the successful and backfire branches of the Force the Hand of Fate forecast:
+When relevant game state changes, the cached forecast is invalidated and recalculated.
 
-```javascript
-if (Math.random() < 0.0001) choices.push('Free Sugar Lump');
-```
+## Reflection
 
-and:
+This project started as a small quality-of-life improvement, but it became a useful exercise in understanding how deterministic randomness works in a real game mod.
 
-```javascript
-if (Math.random() < 0.003) choices.push('Free Sugar Lump');
-```
+The main challenge was not just finding the next Sweet outcome. The original mod already had the basic Force the Hand of Fate prediction logic. The harder part was adapting that logic for a long-range search in a way that would still be usable during normal gameplay.
 
-This update uses the same outcome name, `Free Sugar Lump`, as the target for the Sweet forecast.
+The biggest design decision was to keep the Sweet forecast separate from the regular forecast table. That made the feature cleaner because the user only sees the information they actually need: how far away the next Sweet is.
 
-## Why the implementation is separate from the normal forecast table
+The performance work was also important. Searching a million future outcomes all at once would be a bad user experience, so the scan was split into chunks and cached. That made the feature practical instead of just technically possible.
 
-The normal Fortune Cookie forecast table is designed to show a short list of upcoming outcomes.
+This project helped me practice:
 
-The Sweet forecast may need to search hundreds of thousands or millions of future spell positions.
-
-Putting that many rows into the tooltip would be unusable.
-
-Instead, this update performs a targeted search and displays only the useful result:
-
-```text
-Next Sweet: X spells
-```
+* Reading and modifying an existing JavaScript codebase
+* Working with seeded RNG logic
+* Preserving compatibility with existing mod behavior
+* Adding user-facing settings
+* Thinking about browser performance
+* Writing a feature that fits naturally into an existing interface
 
 ## Known limitations
 
-### It depends on Cookie Clicker RNG behavior
+### The forecast depends on Cookie Clicker’s current RNG behavior
 
-This mod predicts outcomes by matching Cookie Clicker’s seeded RNG sequence. If Cookie Clicker changes the Force the Hand of Fate RNG logic in a future version, the forecast may become inaccurate.
+The mod predicts outcomes by matching Cookie Clicker’s seeded RNG sequence. If Cookie Clicker changes Force the Hand of Fate logic in a future version, the forecast may become inaccurate.
 
-### It depends on game state
+### The number is total Grimoire spells, not only Force the Hand of Fate casts
 
-The forecast can change if relevant game state changes, such as:
+The forecast uses total Grimoire spell count because that is what the game uses for the spell RNG seed.
 
-* Season
-* Dragonflight buff status
-* Number of spells cast
-* Simulated golden cookies setting
-* Other mods changing Force the Hand of Fate behavior
-
-### It searches only within the configured limit
+### The scan only searches within the configured limit
 
 If the tooltip says:
 
@@ -277,38 +253,12 @@ If the tooltip says:
 Next Sweet: not found
 ```
 
-that does not mean there is no Sweet in the future. It only means one was not found within the configured scan limit.
+that does not mean there is no Sweet in the future. It only means one was not found within the current scan limit.
 
-Increase the scan limit in settings to search farther.
-
-## Credits
-
-Original mod:
-
-```text
-Fortune Cookie by Klattmose
-```
-
-Original mod loader:
-
-```javascript
-javascript:(function() { Game.LoadMod('https://klattmose.github.io/CookieClicker/FortuneCookie.js'); }());
-```
-
-This update:
-
-```text
-FortuneCookieUpdate by danlitvak
-```
-
-Primary addition:
-
-```text
-Configurable Sweet / Free Sugar Lump forecast for Force the Hand of Fate
-```
+Increasing the scan limit allows the mod to search farther ahead.
 
 ## Disclaimer
 
-This is a fan-made modification for Cookie Clicker. It is based on an existing community mod and is intended for personal gameplay convenience and experimentation.
+This is a fan-made Cookie Clicker mod update based on an existing community mod. It is intended for personal gameplay convenience, learning, and experimentation.
 
 Cookie Clicker and the original Fortune Cookie mod belong to their respective creators.
