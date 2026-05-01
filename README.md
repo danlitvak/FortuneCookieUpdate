@@ -1,11 +1,3 @@
-Create a file named:
-
-```text
-README.md
-```
-
-Then paste this:
-
 ````markdown
 # Fortune Cookie Update
 
